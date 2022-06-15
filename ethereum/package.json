@@ -1,0 +1,11 @@
+{
+  "name": "kickstart-next",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "cd .. && mocha",
+    "compile": "node --experimental-json-modules compile.js",
+    "deploy": "node --experimental-json-modules deploy.js"
+  }
+}
