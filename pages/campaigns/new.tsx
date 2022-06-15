@@ -19,8 +19,8 @@ const New = () => {
   const { register, handleSubmit } = useForm<FormType>();
 
   async function onSubmit({ contribution }: FormType) {
-    await createCampaign(parseFloat(contribution));
-    router.push("/");
+    const isSuccess = await createCampaign(parseFloat(contribution));
+    if (isSuccess) setTimeout(() => router.push("/"), 1000);
   }
 
   return (

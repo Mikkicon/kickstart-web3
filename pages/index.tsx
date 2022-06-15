@@ -17,7 +17,7 @@ const Home: NextPage<HomeProps> = () => {
   useEffect(() => {
     setTimeout(() => {
       loadCampaigns();
-    }, 2000);
+    }, 1000);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
