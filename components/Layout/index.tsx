@@ -5,7 +5,7 @@ import Header from "../Header";
 
 const Layout = ({ children }: { children?: ReactNode }) => {
   return (
-    <div style={{ backgroundColor: grey[900], height: "100vh" }}>
+    <div style={{ backgroundColor: grey[900], minHeight: "100vh" }}>
       <Container sx={{ color: "text.primary" }}>
         <Header />
         <main>

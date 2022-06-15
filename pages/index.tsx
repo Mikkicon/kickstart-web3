@@ -1,26 +1,24 @@
 import type { NextPage } from "next";
-
-import CampaingFactory from "../ethereum/factory";
-import { useEffect, useState } from "react";
-import { Box, Button, Container, Grid, Typography } from "@mui/material";
+import { useEffect } from "react";
+import { Box, Button, Grid, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+
 import CampaignList from "../components/CampaignList";
 import Layout from "../components/Layout";
+import useCampaigns from "../hooks/useCampaigns";
+import Link from "next/link";
 
 type HomeProps = {
   campaigns?: string[];
 };
 const Home: NextPage<HomeProps> = () => {
-  const [campaigns, setCampaigns] = useState<string[]>([]);
-
-  async function _setCampaigns() {
-    const getContracts = await CampaingFactory.methods.getContracts();
-    const campaigns = await getContracts.call().catch(console.error);
-    if (campaigns) setCampaigns(campaigns);
-  }
+  const { campaigns, loadCampaigns } = useCampaigns();
 
   useEffect(() => {
-    _setCampaigns();
+    setTimeout(() => {
+      loadCampaigns();
+    }, 2000);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -28,29 +26,20 @@ const Home: NextPage<HomeProps> = () => {
       <Grid container alignItems="center" justifyContent="space-between">
         <Grid item sm={8}>
           <Typography variant="h5">Open Campaigns</Typography>
-          <CampaignList
-            campaigns={[...campaigns, ...campaigns, ...campaigns]}
-          />
+          <CampaignList campaigns={campaigns} />
         </Grid>
-        {/* <ul>
-          {campaigns && campaigns.map((camp) => <li key={camp}>{camp}</li>)}
-        </ul> */}
         <Grid item sm={3}>
           <Box display="flex" justifyContent="flex-end">
-            <Button variant="contained" startIcon={<AddIcon />}>
-              Create Campaign
-            </Button>
+            <Link href={"/campaigns/new"}>
+              <Button variant="contained" startIcon={<AddIcon />}>
+                Create Campaign
+              </Button>
+            </Link>
           </Box>
         </Grid>
       </Grid>
     </Layout>
   );
 };
-
-// export const getServerSideProps = async (): Promise<{props: HomeProps}> => {
-//   const getContracts = await CampaingFactory.methods.getContracts()
-//   const campaigns = (await getContracts.call().catch(console.error)) || null
-//   return {props: {campaigns}}
-// }
 
 export default Home;

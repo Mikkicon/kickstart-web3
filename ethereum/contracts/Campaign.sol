@@ -91,4 +91,34 @@ contract Campaign {
         requests[requestIdx].destination.transfer(requests[requestIdx].amount);
         requests[requestIdx].status = Status.finalized;
     }
+
+    function getSummary()
+        public
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256,
+            uint256,
+            address
+        )
+    {
+        uint256 pendingRequests = 0;
+        for (uint256 i = 0; i < requests.length; i++) {
+            if (requests[i].status == Status.pending) {
+                pendingRequests++;
+            }
+        }
+        return (
+            amountApprovers,
+            minimumContribution,
+            address(this).balance,
+            pendingRequests,
+            manager
+        );
+    }
+
+    function getRequestsAmount() public view returns (uint256) {
+        return requests.length;
+    }
 }
