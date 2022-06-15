@@ -65,7 +65,7 @@ const CampaignDetails = () => {
                     </CardContent>
                     {link ? (
                       <CardActions>
-                        <Link href={`${router.asPath}/${link.href}`}>
+                        <Link href={`${router.asPath}${link.href}`}>
                           <Button>{link.name}</Button>
                         </Link>
                       </CardActions>

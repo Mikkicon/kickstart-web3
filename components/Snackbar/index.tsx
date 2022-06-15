@@ -12,7 +12,6 @@ const Snackbar = ({
   const [isOpen, setOpen] = useState<boolean>(
     status === "error" || status === "success"
   );
-  console.log({ status, message });
 
   useEffect(() => {
     setOpen(status === "error" || status === "success");

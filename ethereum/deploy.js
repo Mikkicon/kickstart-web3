@@ -1,19 +1,17 @@
 import HDWalletProvider from "@truffle/hdwallet-provider";
 import Web3 from "web3";
-import 'dotenv/config'
+import "dotenv/config";
 
-import compiledFactory from './build/CampaignFactory.json'
+import compiledFactory from "./build/CampaignFactory.json";
 
 import "./compile.js";
 
-const {abi: factoryAbi, evm: factoryEvm} = compiledFactory
+const { abi: factoryAbi, evm: factoryEvm } = compiledFactory;
 
 const provider = new HDWalletProvider(
   process.env.RECOVERY_PHRASE,
   process.env.INFURA_URL
 );
-
-console.log(process.env.RECOVERY_PHRASE);
 
 const web3 = new Web3(provider);
 

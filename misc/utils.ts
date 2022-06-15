@@ -1,5 +1,18 @@
+import { GridColDef } from "@mui/x-data-grid";
+
 import web3 from "../ethereum/web3";
-import { SummaryItem, RequestItem } from "./types";
+import {
+  renderApproveButton,
+  renderFinalizeButton,
+} from "../pages/campaigns/[address]/requests/CellButton";
+import {
+  SummaryItem,
+  ContractTupleResponse,
+  ContractRequestItem,
+  RequestRow,
+  CampaignStatus,
+  RequestFields,
+} from "./types";
 
 export async function asyncConfirm(duration = 1000) {
   return new Promise<void>(function (resolve, reject) {
@@ -11,9 +24,7 @@ export async function asyncConfirm(duration = 1000) {
   });
 }
 
-export function formatSummary(summary: {
-  [key in number]: string;
-}): SummaryItem[] {
+export function formatSummary(summary: ContractTupleResponse): SummaryItem[] {
   return [
     {
       id: "approversAmount",
@@ -49,8 +60,57 @@ export function formatSummary(summary: {
   ];
 }
 
-export function formatRequests(requests: {
-  [key in number]: string;
-}): RequestItem[] {
-  return [];
+export function getRequestStatus(statusNumberString: string) {
+  return Object.values(CampaignStatus)[parseInt(statusNumberString)];
 }
+
+export function formatRequests(
+  requests: ContractRequestItem[],
+  totalApprovers: number
+): RequestRow[] {
+  return requests.map((request) => ({
+    [RequestFields.id]: request[RequestFields.id],
+    [RequestFields.amount]: `${web3.utils.fromWei(
+      request[RequestFields.amount],
+      "ether"
+    )} ETH`,
+    [RequestFields.destination]: request[RequestFields.destination],
+    [RequestFields.status]: getRequestStatus(request[RequestFields.status]),
+    [RequestFields.amountApproved]: `${parseInt(
+      request[RequestFields.amountApproved]
+    )}/${totalApprovers}`,
+  }));
+}
+
+export const requestsColDef: GridColDef[] = [
+  { field: RequestFields.id, headerName: "Id", width: 30 },
+  {
+    field: RequestFields.amount,
+    headerName: "Requested amount",
+    type: "number",
+    width: 120,
+  },
+  { field: RequestFields.destination, headerName: "Destination", width: 370 },
+  {
+    field: RequestFields.status,
+    headerName: "Request status",
+    width: 140,
+  },
+  {
+    field: RequestFields.amountApproved,
+    headerName: "Approved",
+    width: 60,
+  },
+  {
+    field: "Approve",
+    headerName: "Approve",
+    width: 150,
+    renderCell: renderApproveButton,
+  },
+  {
+    field: "Finalize",
+    headerName: "Finalize",
+    width: 150,
+    renderCell: renderFinalizeButton,
+  },
+];

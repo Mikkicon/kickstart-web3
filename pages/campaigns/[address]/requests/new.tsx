@@ -24,8 +24,6 @@ const New = () => {
   const { register, handleSubmit } = useForm<FormType>();
 
   async function onSubmit({ amount, recipient }: FormType) {
-    console.log(amount, recipient);
-
     if (!address || Array.isArray(address)) return;
     const isSuccess = await createRequest(address, amount, recipient);
     if (isSuccess) setTimeout(() => router.push(requestsUrl), 1000);

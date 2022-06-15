@@ -1,15 +1,34 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AbiItem } from "web3-utils/types";
 import CampaingFactory from "../ethereum/factory";
 import getCampaignInstance from "../ethereum/campaign";
 import web3 from "../ethereum/web3";
-import { Address, RequestItem, Status, SummaryItem } from "../misc/types";
+import {
+  Address,
+  ContractRequestItem,
+  RequestItem,
+  Status,
+  SummaryItem,
+} from "../misc/types";
 import { asyncConfirm, formatRequests, formatSummary } from "../misc/utils";
 
 const useCampaigns = () => {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string>();
   const [campaigns, setCampaigns] = useState<string[]>();
+  const [currentAccount, setCurrentAccount] = useState<Address>();
+
+  useEffect(() => {
+    listenAccountChange();
+  }, []);
+
+  function listenAccountChange() {
+    window.ethereum?.on("accountsChanged", function () {
+      web3.eth
+        .getAccounts()
+        .then(([account]) => setCurrentAccount(account as Address));
+    });
+  }
 
   const setStatusTimeout = useCallback((status: Status) => {
     setStatus(status);
@@ -52,17 +71,67 @@ const useCampaigns = () => {
     [setErrorTimeout]
   );
 
-  const getRequests = useCallback(
-    async function (address: Address): Promise<RequestItem[]> {
-      const campaign = await getCampaignInstance(address);
-      const requests = await campaign.methods
-        .requests()
+  const isManagerOfCampaign = useCallback(
+    async function (campaignAddress: Address): Promise<boolean> {
+      const campaign = await getCampaignInstance(campaignAddress);
+      const manager = await campaign.methods
+        .manager()
         .call()
         .catch(setErrorTimeout);
 
-      return formatRequests(requests);
+      const [from] = await web3.eth.getAccounts();
+
+      return manager === from;
     },
     [setErrorTimeout]
+  );
+
+  const hasApproved = useCallback(
+    async function (campaignAddress: Address): Promise<boolean> {
+      const campaign = await getCampaignInstance(campaignAddress);
+      const [userAddress] = await web3.eth.getAccounts();
+
+      const hasApproved = await campaign.methods
+        .approvers(userAddress)
+        .call()
+        .catch(setErrorTimeout);
+
+      return hasApproved;
+    },
+    [setErrorTimeout]
+  );
+
+  const getRequests = useCallback(
+    async function (campaignAddress: Address) {
+      const campaign = await getCampaignInstance(campaignAddress);
+      const requestsAmount = await campaign.methods
+        .getRequestsAmount()
+        .call()
+        .catch(setErrorTimeout);
+
+      // TODO make amountApprovers field public in Campaign.sol
+      // and re-write to avoid using whole summary
+      const [totalApprovers] = (await getSummary(campaignAddress)).filter(
+        (a) => a.id === "approversAmount"
+      );
+
+      // @ts-ignore
+      const indecies = [...Array(parseInt(requestsAmount)).keys()];
+      const requestsPromises = indecies.map((n) =>
+        campaign.methods.requests(n).call()
+      );
+      const requests = await Promise.allSettled(requestsPromises);
+
+      const onlyFulfilled = requests.filter(
+        (req) => req.status === "fulfilled"
+      ) as PromiseFulfilledResult<ContractRequestItem>[];
+
+      return formatRequests(
+        onlyFulfilled.map((req) => req.value),
+        parseInt(totalApprovers.value)
+      );
+    },
+    [getSummary, setErrorTimeout]
   );
 
   const createRequest = useCallback(
@@ -156,15 +225,70 @@ const useCampaigns = () => {
     [getSummary, setErrorTimeout, setStatusTimeout]
   );
 
+  const approveRequest = useCallback(
+    async function (campaignAddress: Address, requestIndex: number) {
+      setStatus("loading");
+
+      try {
+        const campaign = await getCampaignInstance(campaignAddress);
+
+        const [from] = await web3.eth.getAccounts();
+        await campaign.methods.approveRequest(requestIndex).send({ from });
+        // await asyncConfirm();
+
+        setStatusTimeout("success");
+
+        await getSummary(campaignAddress);
+        return true;
+      } catch (error: any) {
+        if (typeof error === "string") setErrorTimeout(error);
+        else if (typeof error?.message === "string")
+          setErrorTimeout(error.message);
+        else throw error;
+      }
+    },
+    [getSummary, setErrorTimeout, setStatusTimeout]
+  );
+
+  const finalizeRequest = useCallback(
+    async function (campaignAddress: Address, requestIndex: number) {
+      setStatus("loading");
+      try {
+        const campaign = await getCampaignInstance(campaignAddress);
+
+        const [from] = await web3.eth.getAccounts();
+        await campaign.methods.finalizeRequest(requestIndex).send({ from });
+        // await asyncConfirm();
+
+        setStatusTimeout("success");
+
+        await getSummary(campaignAddress);
+        return true;
+      } catch (error: any) {
+        if (typeof error === "string") setErrorTimeout(error);
+        else if (typeof error?.message === "string")
+          setErrorTimeout(error.message);
+        else throw error;
+      }
+    },
+    [getSummary, setErrorTimeout, setStatusTimeout]
+  );
+
   return {
     status,
     error,
     campaigns,
+    currentAccount,
     loadCampaigns,
     createCampaign,
     createRequest,
     getSummary,
     contribute,
+    getRequests,
+    hasApproved,
+    approveRequest,
+    finalizeRequest,
+    isManagerOfCampaign,
   };
 };
 
