@@ -1,10 +1,7 @@
-import { GridColDef } from "@mui/x-data-grid";
+import { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 
 import web3 from "../ethereum/web3";
-import {
-  renderApproveButton,
-  renderFinalizeButton,
-} from "../pages/campaigns/[address]/requests/CellButton";
+import { ApproveButton, FinalizeButton } from "../components/CellButton/CellButton";
 import {
   SummaryItem,
   ContractTupleResponse,
@@ -105,12 +102,12 @@ export const requestsColDef: GridColDef[] = [
     field: "Approve",
     headerName: "Approve",
     width: 150,
-    renderCell: renderApproveButton,
+    renderCell: (params: GridRenderCellParams<any, any, any>) => (<ApproveButton params={params} />)
   },
   {
     field: "Finalize",
     headerName: "Finalize",
     width: 150,
-    renderCell: renderFinalizeButton,
+    renderCell: ( params: GridRenderCellParams<any, any, any>) => (<FinalizeButton params={params} />)
   },
 ];

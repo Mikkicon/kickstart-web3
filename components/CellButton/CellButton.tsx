@@ -4,10 +4,10 @@ import { useRouter } from "next/router";
 import { MouseEventHandler, useCallback, useEffect, useState } from "react";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 
-import useCampaigns from "../../../../hooks/useCampaigns";
-import { Address, RequestRow, CampaignStatus } from "../../../../misc/types";
+import useCampaigns from "../../hooks/useCampaigns";
+import { Address, RequestRow, CampaignStatus } from "../../misc/types";
 
-const ApproveButton = ({
+export const ApproveButton = ({
   params,
 }: {
   params: GridRenderCellParams<any, any, any>;
@@ -78,7 +78,7 @@ const ApproveButton = ({
   );
 };
 
-const FinalizeButton = ({
+export const FinalizeButton = ({
   params,
 }: {
   params: GridRenderCellParams<any, any, any>;
@@ -129,10 +129,3 @@ const FinalizeButton = ({
     </LoadingButton>
   );
 };
-
-export const renderApproveButton = (
-  params: GridRenderCellParams<any, any, any>
-) => <ApproveButton params={params} />;
-export const renderFinalizeButton = (
-  params: GridRenderCellParams<any, any, any>
-) => <FinalizeButton params={params} />;
